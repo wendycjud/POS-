@@ -1,0 +1,3 @@
+ALTER TABLE public.products
+ALTER COLUMN stock TYPE DECIMAL(10,2)
+USING stock::DECIMAL(10,2);
