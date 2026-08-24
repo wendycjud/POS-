@@ -1,0 +1,535 @@
+<div class="pos-wrapper">
+  <!-- Top Header -->
+  <div
+    class="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-2 border-b border-[#e8e8e8] bg-white px-3 py-2 md:h-[60px] md:flex-nowrap md:gap-4 md:px-5"
+  >
+    <!-- Left -->
+    <div
+      class="order-1 flex min-w-0 shrink-0 items-center gap-2 md:min-w-[180px] md:gap-3"
+    >
+      <button
+        type="button"
+        class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border-0 bg-transparent text-gray-500 transition-colors hover:bg-[#f4f6f9] hover:text-[#1b3050]"
+        (click)="layout.toggle()"
+      >
+        <mat-icon> menu </mat-icon>
+      </button>
+
+      <h1
+        class="m-0 truncate whitespace-nowrap text-[15px] font-bold text-[#1b3050] md:text-[17px]"
+      >
+        Punto de Venta
+      </h1>
+    </div>
+
+    <!-- Right -->
+    <div class="order-2 ml-auto flex shrink-0 items-center gap-1">
+      <button
+        type="button"
+        class="flex items-center gap-1 rounded-lg border-0 bg-[#d97706] px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#b45309] md:gap-1.5 md:px-3.5 md:text-[13px]"
+        (click)="openQuickSale()"
+      >
+        <mat-icon
+          class="!h-4 !w-4 !text-base md:!h-[18px] md:!w-[18px] md:!text-lg"
+        >
+          bolt
+        </mat-icon>
+
+        <span class="hidden sm:inline"> Quick Sale </span>
+      </button>
+
+      <button
+        type="button"
+        class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border-0 bg-transparent text-gray-500 hover:bg-[#f4f6f9] hover:text-[#1b3050]"
+      >
+        <mat-icon> qr_code_scanner </mat-icon>
+      </button>
+
+      <button
+        type="button"
+        class="relative flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border-0 bg-transparent text-gray-500 hover:bg-[#f4f6f9] hover:text-[#1b3050]"
+        (click)="openHeldSales()"
+      >
+        <mat-icon> notifications </mat-icon>
+
+        @if (heldCount > 0) {
+          <span
+            class="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#c62828] text-[9px] font-bold text-white"
+          >
+            {{ heldCount }}
+          </span>
+        }
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div
+      class="order-3 w-full min-w-0 flex-none md:order-2 md:max-w-[520px] md:flex-1"
+    >
+      <div
+        class="flex h-[38px] min-w-0 w-full items-center gap-2 rounded-lg border border-[#e8e8e8] bg-[#f4f6f9] px-2 focus-within:border-[#c9a84c] md:h-10 md:px-3"
+      >
+        <mat-icon class="!h-5 !w-5 !shrink-0 !text-xl !text-gray-500">
+          search
+        </mat-icon>
+
+        <input
+          #searchInput
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchInput()"
+          (keydown)="onSearchKeydown($event)"
+          (blur)="onSearchBlur()"
+          placeholder="Buscar productos por nombre, SKU o código de barras..."
+          class="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-[#1b3050] outline-none placeholder:text-gray-500"
+        />
+
+        <kbd
+          class="hidden whitespace-nowrap rounded bg-[#e8e8e8] px-1.5 py-0.5 text-[11px] text-gray-500 md:block"
+        >
+          Ctrl + K
+        </kbd>
+
+        @if (searchQuery) {
+          <button
+            type="button"
+            class="flex shrink-0 items-center border-0 bg-transparent p-0 text-gray-500 hover:text-[#1b3050]"
+            (click)="searchQuery = ''; onSearch()"
+          >
+            <mat-icon class="!h-4 !w-4 !text-base"> close </mat-icon>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="pos-body">
+    <!-- Product Panel -->
+    <div class="product-panel">
+      <!-- Category bar -->
+      <div
+        class="flex shrink-0 items-start justify-between gap-2 border-b border-[#e8e8e8] bg-white px-3.5 py-2"
+      >
+        <!-- Categories -->
+        <div
+          class="flex max-h-[72px] min-w-0 flex-1 flex-wrap content-start gap-1.5 overflow-y-auto"
+        >
+          <button
+            type="button"
+            class="whitespace-nowrap rounded-full border border-[#e2e6ec] bg-white px-3.5 py-1 text-[13px] font-medium text-gray-500 transition-all hover:border-[#c9a84c] hover:text-[#1b3050]"
+            [class.bg-[#1b3050]]="!selectedCategory"
+            [class.text-white]="!selectedCategory"
+            [class.border-[#1b3050]]="!selectedCategory"
+            (click)="selectCategory(null)"
+          >
+            Todos
+          </button>
+
+          @for (cat of categories; track cat.id) {
+            <button
+              type="button"
+              class="whitespace-nowrap rounded-full border border-[#e2e6ec] bg-white px-3.5 py-1 text-[13px] font-medium text-gray-500 transition-all hover:border-[#c9a84c] hover:text-[#1b3050]"
+              [class.bg-[#1b3050]]="selectedCategory === cat.id"
+              [class.text-white]="selectedCategory === cat.id"
+              [class.border-[#1b3050]]="selectedCategory === cat.id"
+              (click)="selectCategory(cat.id)"
+            >
+              {{ cat.name }}
+            </button>
+          }
+        </div>
+
+        <!-- Filter -->
+        <button
+          type="button"
+          class="flex shrink-0 items-center gap-1 rounded-lg border border-[#e2e6ec] bg-white px-3.5 py-1 text-[13px] text-gray-500 transition-all hover:border-[#c9a84c] hover:text-[#1b3050]"
+        >
+          <mat-icon class="!h-4 !w-4 !text-base"> tune </mat-icon>
+
+          Filtrar
+        </button>
+      </div>
+
+      <!-- Product grid -->
+      @if (!loadingProducts) {
+        <div
+          class="grid min-h-0 flex-1 content-start gap-3.5 overflow-y-auto p-4"
+          style="grid-template-columns: repeat(auto-fill, minmax(160px, 200px))"
+        >
+          @for (product of products; track product.id) {
+            <div
+              class="group relative cursor-pointer overflow-hidden rounded-xl border border-[#eef0f4] bg-white shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-[#c9a84c] hover:shadow-lg"
+              [class.opacity-55]="product.stockQuantity <= 0"
+              [class.cursor-not-allowed]="product.stockQuantity <= 0"
+              (click)="addToCart(product)"
+            >
+              @if (product.badge) {
+                <div
+                  class="badge"
+                  [class]="'badge-' + product.badge.toLowerCase()"
+                >
+                  {{ product.badge }}
+                </div>
+              }
+
+              <div
+                class="flex h-[150px] items-center justify-center overflow-hidden rounded-t-xl bg-[#f4f6f9]"
+              >
+                @if (product.imageUrl) {
+                  <img
+                    [src]="product.imageUrl"
+                    [alt]="product.name"
+                    class="h-full w-full object-cover"
+                  />
+                } @else {
+                  <div class="flex items-center justify-center text-gray-300">
+                    <mat-icon class="!h-[52px] !w-[52px] !text-[52px]">
+                      inventory_2
+                    </mat-icon>
+                  </div>
+                }
+              </div>
+
+              <div class="px-3 pb-3 pt-2.5">
+                <div
+                  class="mb-1 line-clamp-2 text-[13px] font-semibold leading-[1.3] text-[#1b3050]"
+                >
+                  {{ product.name }}
+                </div>
+
+                <div class="mb-1 text-sm font-bold text-[#1b3050]">
+                  LKR {{ product.retailPrice | number: "1.0-0" }}
+                </div>
+
+                @if (product.stockQuantity <= 0) {
+                  <div class="text-xs font-bold text-[#c62828]">
+                    Out of Stock
+                  </div>
+                } @else {
+                  <div
+                    class="text-xs font-medium text-[#2e7d32]"
+                    [class.text-[#c62828]]="
+                      product.stockQuantity <= product.minStockAlert
+                    "
+                  >
+                    Stock: {{ product.stockQuantity }}
+                  </div>
+                }
+              </div>
+
+              @if (product.stockQuantity > 0) {
+                <div
+                  class="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#1a2332]/70 text-[#c9a84c] opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+                >
+                  <mat-icon class="!h-9 !w-9 !text-4xl">
+                    add_shopping_cart
+                  </mat-icon>
+                </div>
+              }
+            </div>
+          }
+
+          @if (products.length === 0) {
+            <div class="no-products">No products found</div>
+          }
+        </div>
+      } @else {
+        <div class="loading-center">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+      }
+    </div>
+
+    <!-- Mobile cart FAB -->
+    <button class="mobile-cart-fab" (click)="mobileCartOpen = true">
+      <mat-icon> shopping_cart </mat-icon>
+
+      @if (cart().length > 0) {
+        <span class="fab-badge">
+          {{ cart().length }}
+        </span>
+      }
+
+      @if (cartTotal() > 0) {
+        <span class="fab-total"> LKR {{ cartTotal() | number: "1.0-0" }} </span>
+      }
+    </button>
+
+    <!-- Mobile cart overlay -->
+    @if (mobileCartOpen) {
+      <div class="mobile-cart-overlay" (click)="mobileCartOpen = false"></div>
+    }
+
+    <!-- Cart Panel -->
+    <div class="cart-panel" [class.mobile-open]="mobileCartOpen">
+      <!-- Mobile cart close -->
+      <button class="mobile-cart-close" (click)="mobileCartOpen = false">
+        <mat-icon> keyboard_arrow_down </mat-icon>
+      </button>
+
+      <!-- Cart header -->
+      <div class="cart-header">
+        <span class="cart-title">
+          Cart
+
+          <span class="cart-count"> ({{ cart().length }}) </span>
+        </span>
+
+        @if (cart().length) {
+          <button class="clear-cart-btn" (click)="clearCart()">
+            Clear Cart
+
+            <mat-icon> delete_outline </mat-icon>
+          </button>
+        }
+      </div>
+
+      <!-- Cart items -->
+      <div class="cart-items">
+        @if (cart().length === 0) {
+          <div class="empty-cart">
+            <mat-icon> shopping_cart </mat-icon>
+
+            <p>Cart is empty</p>
+
+            <p class="hint">Click a product to add</p>
+          </div>
+        }
+
+        @for (item of cart(); track item.productId; let i = $index) {
+          <div class="cart-item">
+            <div class="cart-item-img">
+              @if (item.imageUrl) {
+                <img [src]="item.imageUrl" [alt]="item.productName" />
+              } @else {
+                <mat-icon> inventory_2 </mat-icon>
+              }
+            </div>
+
+            <div class="cart-item-body">
+              <div class="cart-item-row1">
+                <span class="cart-item-name">
+                  {{ item.productName }}
+                </span>
+
+                <button class="remove-btn" (click)="removeFromCart(i)">
+                  <mat-icon> close </mat-icon>
+                </button>
+              </div>
+
+              <div class="cart-item-price">
+                LKR {{ item.unitPrice | number: "1.0-0" }}
+              </div>
+
+              <div class="cart-item-row2">
+                <div class="qty-control">
+                  <button (click)="changeQty(i, -1)">
+                    <mat-icon> remove </mat-icon>
+                  </button>
+
+                  <input
+                    type="number"
+                    [(ngModel)]="item.quantity"
+                    (change)="onQtyChange(i)"
+                    min="0.5"
+                    class="qty-input"
+                  />
+
+                  <button (click)="changeQty(i, 1)">
+                    <mat-icon> add </mat-icon>
+                  </button>
+                </div>
+
+                <span class="item-total">
+                  LKR {{ item.subtotal | number: "1.0-0" }}
+                </span>
+              </div>
+
+              <div class="cart-item-disc-row">
+                <span class="disc-label"> Disc LKR </span>
+
+                <input
+                  type="number"
+                  [ngModel]="item.itemDiscount || null"
+                  (ngModelChange)="setItemDiscount(i, $event)"
+                  min="0"
+                  [max]="item.unitPrice * item.quantity"
+                  placeholder="0"
+                  class="disc-input"
+                />
+
+                @if (item.itemDiscount > 0) {
+                  <span class="disc-save">
+                    -{{ item.itemDiscount | number: "1.0-0" }}
+                  </span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Cart summary -->
+      @if (cart().length > 0) {
+        <div class="cart-summary">
+          <div class="summary-row">
+            <span> Subtotal </span>
+
+            <span> LKR {{ subtotal() | number: "1.0-0" }} </span>
+          </div>
+
+          @if (totalDiscount() > 0) {
+            <div class="summary-row">
+              <span> Item Discounts </span>
+
+              <span class="discount-val">
+                - LKR {{ totalDiscount() | number: "1.0-0" }}
+              </span>
+            </div>
+          }
+
+          <div class="summary-row bill-disc-row">
+            <span> Bill Discount </span>
+
+            <div class="bill-disc-input-wrap">
+              <input
+                type="number"
+                [ngModel]="billDiscountPct() || null"
+                (ngModelChange)="billDiscountPct.set(+$event || 0)"
+                min="0"
+                max="100"
+                placeholder="0"
+                class="bill-disc-input"
+              />
+
+              <span class="bill-disc-prefix"> % </span>
+
+              @if (billDiscountAmt() > 0) {
+                <span class="disc-save">
+                  -{{ billDiscountAmt() | number: "1.0-0" }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="disc-chips">
+            @for (pct of discChips; track pct) {
+              <button
+                class="disc-chip"
+                [class.active]="billDiscountPct() === pct"
+                (click)="billDiscountPct.set(pct)"
+              >
+                {{ pct }}%
+              </button>
+            }
+
+            @if (billDiscountPct() > 0) {
+              <button
+                class="disc-chip clear-chip"
+                (click)="billDiscountPct.set(0)"
+              >
+                Clear
+              </button>
+            }
+          </div>
+
+          <div class="summary-row total-row">
+            <span> Total </span>
+
+            <span class="total-val">
+              LKR {{ cartTotal() | number: "1.0-0" }}
+            </span>
+          </div>
+        </div>
+      }
+
+      <!-- Checkout / Hold -->
+      <div class="cart-actions">
+        <div class="sale-type-toggle">
+          <button
+            [class.active]="saleType === 'RETAIL'"
+            (click)="setSaleType('RETAIL')"
+          >
+            RETAIL
+          </button>
+
+          <button
+            [class.active]="saleType === 'WHOLESALE'"
+            (click)="setSaleType('WHOLESALE')"
+          >
+            WHOLESALE
+          </button>
+        </div>
+
+        <button
+          class="checkout-btn"
+          (click)="openCheckout()"
+          [disabled]="cart().length === 0"
+        >
+          Checkout
+          <kbd>F2</kbd>
+        </button>
+
+        <button
+          class="hold-btn"
+          (click)="holdSale()"
+          [disabled]="cart().length === 0"
+        >
+          Hold Sale
+          <kbd>F3</kbd>
+        </button>
+      </div>
+
+      <!-- Bottom action buttons -->
+      <div class="bottom-actions">
+        <button
+          class="action-btn cash-in-btn"
+          (click)="openCashIn()"
+          [disabled]="!session()"
+        >
+          <mat-icon> arrow_downward </mat-icon>
+
+          <span> Cash In </span>
+        </button>
+
+        <button
+          class="action-btn cash-out-btn"
+          (click)="openCashOut()"
+          [disabled]="!session()"
+        >
+          <mat-icon> arrow_upward </mat-icon>
+
+          <span> Cash Out </span>
+        </button>
+
+        <button
+          class="action-btn"
+          (click)="openHeldSales()"
+          [disabled]="!session()"
+        >
+          <mat-icon> history </mat-icon>
+
+          <span> Held Sales </span>
+        </button>
+
+        <button
+          class="action-btn return-btn"
+          (click)="openReturn()"
+          [disabled]="!session()"
+        >
+          <mat-icon> assignment_return </mat-icon>
+
+          <span> Return </span>
+        </button>
+
+        @if (!session() && !auth.isOwner()) {
+          <button class="action-btn open-session-btn" (click)="openSession()">
+            <mat-icon> play_circle_outline </mat-icon>
+
+            <span> Open Session </span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

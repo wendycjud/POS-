@@ -1,5 +1,7 @@
 @use '@angular/material' as mat;
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 // Color palette
 $primary-navy: #1a2332;
 $gold-accent: #c9a84c;
